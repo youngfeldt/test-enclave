@@ -14,7 +14,7 @@ image: build  ## Builds docker image
 	docker build -t nitro_attestation-console .
 
 eif: image keys  ## Builds EIF and signs it
-	nitro-cli build-enclave --docker-uri nitro-attestation-console:latest --output-file nitro-attestation-console-signed.eif -signed.eif --private-key key_name.pem --signing-certificate certificate.pem
+	nitro-cli build-enclave --docker-uri nitro-attestation-console:latest --output-file nitro-attestation-console-signed.eif --private-key key_name.pem --signing-certificate certificate.pem
 
 keys: my_priv_key.pem csr.pem certificate.pem  ## Builds keys to sign image with
 	@echo "making keys"
