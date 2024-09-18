@@ -5,7 +5,7 @@ help:
 
 clean:  ## Clean up rust target and remove keys
 	cargo clean
-	rm -v *.pem
+	rm -fv *.pem
 
 build: ## Builds rust program that will reside in enclave and get attestation doc
 	cargo build --release
