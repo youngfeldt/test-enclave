@@ -1,0 +1,25 @@
+.ONESHELL:
+
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+build: ## Builds rust program that will reside in enclave and get attestation doc
+	cargo build --release
+
+image: build  ## Builds docker image
+	docker build -t nitro_attestation-console .
+
+eif: image keys  ## Builds EIF and signs it
+	nitro-cli build-enclave --docker-uri rust-nitro-attestation-console:latest --output-file rust-nitro-attestation-console.eif
+	nitro-cli build-enclave --docker-uri hello-world:latest --output-file hello-signed.eif --private-key key_name.pem --signing-certificate certificate.pem
+
+keys: ## Builds keys to sign image with
+	@# Create private key (with elyptic curve)
+	@echo "Creating private key"
+	@openssl ecparam -name secp384r1 -genkey -out my_priv_key.pem
+	@# Gen CSR
+	@echo "creating CSR"
+	@openssl req -new -key my_priv_key.pem -sha384 -nodes -subj "/CN=AWS/C=US/ST=WA/L=Seattle/O=Amazon/OU=AWS" -out csr.pem
+	@# Sign it
+	@echo "Creating signed certificate"
+	@openssl x509 -req -days 20  -in csr.pem -out certificate.pem -sha384 -signkey my_priv_key.pem
