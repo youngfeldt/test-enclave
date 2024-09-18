@@ -13,12 +13,15 @@ build: ## Builds rust program that will reside in enclave and get attestation do
 image: build  ## Builds docker image
 	docker build -t nitro_attestation-console .
 
-eif: image keys  ## Builds EIF and signs it
-	nitro-cli build-enclave --docker-uri nitro-attestation-console:latest --output-file nitro-attestation-console-signed.eif \\
-	--private-key my_priv_key.pem --signing-certificate certificate.pem
-
+eif: image keys nitro-attestation-console-signed.eif  ## Builds EIF and signs it
+	@echo eif
 keys: my_priv_key.pem csr.pem certificate.pem  ## Builds keys to sign image with
 	@echo "making keys"
+
+enclave: eif  ## Runs Nitro Enclave
+# Make idempotent
+	nitro-cli run-enclave --cpu-count 2 --memory 512 --eif-path ./nitro-attestation-console-signed.eif
+	nitro-cli describe-enclaves
 
 ##################
 certificate.pem:
@@ -35,3 +38,7 @@ csr.pem::
 	@# Gen CSR
 	@echo "creating CSR"
 	@openssl req -new -key my_priv_key.pem -sha384 -nodes -subj "/CN=AWS/C=US/ST=WA/L=Seattle/O=Amazon/OU=AWS" -out csr.pem
+
+nitro-attestation-console-signed.eif:
+	nitro-cli build-enclave --docker-uri nitro-attestation-console:latest --output-file nitro-attestation-console-signed.eif \\
+	--private-key my_priv_key.pem --signing-certificate certificate.pem
