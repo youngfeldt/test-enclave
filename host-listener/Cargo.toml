@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 vsock = "0.1.2"  # This is the crate for VSOCK communication
+nix = "0.25.1"
 
