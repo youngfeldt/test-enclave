@@ -12,7 +12,7 @@ build: ## Builds rust program that will reside in enclave and get attestation do
 	cargo build --release
 
 image: build  ## Builds docker image
-	docker build -t nitro_attestation-console .
+	docker build -t nitro-attestation-console .
 
 eif: image keys nitro-attestation-console-signed.eif  ## Builds EIF and signs it
 	@echo eif
@@ -47,15 +47,18 @@ nitro-attestation-console-signed.eif:
 install.sh:
 	@cat << EOF > install.sh
 	sudo yum update -y
-	sudo yum install -y aws-nitro-enclaves-cli aws-nitro-enclaves-cli-devel
+	sudo amazon-linux-extras install -y aws-nitro-enclaves-cli rust1 docker
+	sudo yum install -y aws-nitro-enclaves-cli-devel
 	sudo yum install -y gcc make
-	sudo amazon-linux-extras install docker
-	sudo service docker start
+	# sudo amazon-linux-extras install -y docker
+	sudo systemctl start  docker
+	sudo systemctl enable docker
 	sudo usermod -a -G docker $USER
 	sudo yum groupinstall -y "Development Tools"
 	sudo yum install -y kernel-headers kernel-devel
-	echo;echo;echo;
+	echo;echo;
 	echo "update /etc/nitro_enclaves/allocator.yaml"
+	echo
 	EOF
 
 #.PHONY
