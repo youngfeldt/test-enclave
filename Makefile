@@ -59,6 +59,7 @@ install.sh:
 	sudo yum install -y aws-nitro-enclaves-cli-devel
 	sudo yum install -y gcc make
 	# sudo amazon-linux-extras install -y docker
+    sudo yum install -y wget openssl-devel readline-devel
 	sudo systemctl start  docker
 	sudo systemctl enable docker
 	sudo usermod -a -G docker $USER
@@ -68,6 +69,19 @@ install.sh:
 	echo "update /etc/nitro_enclaves/allocator.yaml"
 	echo
 	EOF
+
+socat: 
+	wget http://www.dest-unreach.org/socat/download/socat-1.7.4.4.tar.gz
+
+	tar xzf socat-1.7.4.4.tar.gz
+	cd socat-1.7.4.4
+	./configure
+	make
+	sudo make install 
+	socat -V
+	which socat
+
+
 
 #.PHONY
 #allocator_config:	
