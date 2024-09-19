@@ -1,0 +1,8 @@
+[package]
+name = "host-listener"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vsock = "0.1.2"  # This is the crate for VSOCK communication
+
