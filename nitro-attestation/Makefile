@@ -6,6 +6,7 @@ help:
 clean:  ## Clean up rust target and remove keys
 	cargo clean
 	rm -fv *.pem
+	rm -fv *.eif
 
 build: ## Builds rust program that will reside in enclave and get attestation doc
 	cargo build --release
@@ -40,5 +41,12 @@ csr.pem::
 	@openssl req -new -key my_priv_key.pem -sha384 -nodes -subj "/CN=AWS/C=US/ST=WA/L=Seattle/O=Amazon/OU=AWS" -out csr.pem
 
 nitro-attestation-console-signed.eif:
-	nitro-cli build-enclave --docker-uri nitro-attestation-console:latest --output-file nitro-attestation-console-signed.eif \\
+	nitro-cli build-enclave --docker-uri nitro-attestation-console:latest --output-file nitro-attestation-console-signed.eif \
 	--private-key my_priv_key.pem --signing-certificate certificate.pem
+
+install.sh:
+@cat << EOF > install.sh
+sudo yum update -y
+sudo amazon-linux-extras install aws-nitro-enclaves-cli
+sudo yum install nitro-enclaves-cli-devel -y
+EOF
