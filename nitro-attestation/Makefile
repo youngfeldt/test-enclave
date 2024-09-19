@@ -21,7 +21,7 @@ keys: my_priv_key.pem csr.pem certificate.pem  ## Builds keys to sign image with
 
 enclave: eif  ## Runs Nitro Enclave
 # Make idempotent
-	nitro-cli run-enclave --cpu-count 2 --memory 512 --eif-path ./nitro-attestation-console-signed.eif
+	nitro-cli run-enclave --cpu-count 2 --memory 2500 --eif-path ./nitro-attestation-console-signed.eif
 	nitro-cli describe-enclaves
 
 ##################
