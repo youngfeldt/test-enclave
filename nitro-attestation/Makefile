@@ -45,8 +45,19 @@ nitro-attestation-console-signed.eif:
 	--private-key my_priv_key.pem --signing-certificate certificate.pem
 
 install.sh:
-@cat << EOF > install.sh
-sudo yum update -y
-sudo amazon-linux-extras install aws-nitro-enclaves-cli
-sudo yum install nitro-enclaves-cli-devel -y
-EOF
+	@cat << EOF > install.sh
+	sudo yum update -y
+	sudo yum install -y aws-nitro-enclaves-cli aws-nitro-enclaves-cli-devel
+	sudo yum install -y gcc make
+	sudo amazon-linux-extras install docker
+	sudo service docker start
+	sudo usermod -a -G docker $USER
+	sudo yum groupinstall -y "Development Tools"
+	sudo yum install -y kernel-headers kernel-devel
+	echo;echo;echo;
+	echo "update /etc/nitro_enclaves/allocator.yaml"
+	EOF
+
+#.PHONY
+#allocator_config:	
+#[ -d /etc/nitro_enclaves/allocator]
