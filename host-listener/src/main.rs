@@ -1,37 +1,46 @@
-use std::net::{Shutdown, TcpListener, TcpStream};
-use std::io::{Read, Write};
-use std::os::unix::io::AsRawFd;
-use vsock::VsockListener;
+use std::io::{self, Read};
+use std::net::Shutdown;
+use vsock::{VsockListener, VsockStream};
+use serde_json::Value;
 
-fn handle_client(mut stream: TcpStream) {
-    let mut buffer = [0u8; 1024]; // Adjust buffer size if needed
-    match stream.read(&mut buffer) {
-        Ok(size) => {
-            if size > 0 {
-                let received_data = String::from_utf8_lossy(&buffer[..size]);
-                println!("Received: {}", received_data);
-            }
-        }
-        Err(e) => {
-            eprintln!("Failed to read from stream: {}", e);
-        }
+fn handle_client(mut stream: VsockStream) -> io::Result<()> {
+    let mut buffer = Vec::new();
+    
+    // Read the incoming data from the enclave
+    stream.read_to_end(&mut buffer)?;
+
+    // Try to deserialize the data into a JSON object for printing
+    if let Ok(response) = serde_json::from_slice::<Value>(&buffer) {
+        println!("Received attestation document: {:?}", response);
+    } else {
+        println!("Failed to parse received data.");
     }
+
+    // Close the connection
+    stream.shutdown(Shutdown::Both)?;
+    Ok(())
 }
 
-fn main() -> std::io::Result<()> {
-    // Use VsockListener to bind to the VSOCK CID and port where the enclave sends data
-    let listener = VsockListener::bind(vsock::Cid::Local, 5005)?; // Use the correct VSOCK port
+fn main() -> io::Result<()> {
+    let vsock_port = 5000; // Must match the port used by the enclave
 
-    println!("Host is listening on VSOCK port 5005...");
+    // Set up a VSOCK listener on the specified port
+    let listener = VsockListener::bind(vsock_port)?;
 
+    println!("Listening for VSOCK connections on port {}", vsock_port);
+
+    // Accept incoming connections in a loop
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                println!("New connection established");
-                handle_client(stream);
+                println!("Connection established.");
+                // Handle the client connection
+                if let Err(e) = handle_client(stream) {
+                    eprintln!("Failed to handle client: {}", e);
+                }
             }
             Err(e) => {
-                eprintln!("Connection failed: {}", e);
+                eprintln!("Error accepting connection: {}", e);
             }
         }
     }
