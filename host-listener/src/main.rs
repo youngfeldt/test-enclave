@@ -1,14 +1,14 @@
-use vsock::{VsockListener, VsockAddr};
+use vsock::VsockListener;
 use std::io::Read;
 
 fn main() {
-    let port: u32 = 5005;  // The port where the listener will bind
-    let addr = VsockAddr::new(vsock::VMADDR_CID_ANY, port);  // Correct address format
+    let port: u32 = 5005;  // Define the port for the listener
 
-    // Bind the listener to the port
-    let listener = VsockListener::bind(&addr).expect("Failed to bind to VSOCK port");
+    // Bind the VsockListener to the port
+    let listener = VsockListener::bind(port).expect("Failed to bind to VSOCK port");
     println!("Listening on VSOCK port {}", port);
 
+    // Continuously accept incoming connections and print the received attestation document
     for stream in listener.incoming() {
         let mut stream = stream.expect("Failed to accept connection");
         let mut buffer = Vec::new();
