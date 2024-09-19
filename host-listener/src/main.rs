@@ -1,19 +1,40 @@
+use std::net::{Shutdown, TcpListener, TcpStream};
+use std::io::{Read, Write};
+use std::os::unix::io::AsRawFd;
 use vsock::VsockListener;
-use nix::sys::socket::{SockAddr, VsockAddr, AddressFamily};
-use std::io::Read;
 
-fn main() {
-    let port: u32 = 5005;  // The port where the listener will bind
-    let addr = SockAddr::new_vsock(nix::unistd::getpid().as_raw(), port);  // Correct address format
+fn handle_client(mut stream: TcpStream) {
+    let mut buffer = [0u8; 1024]; // Adjust buffer size if needed
+    match stream.read(&mut buffer) {
+        Ok(size) => {
+            if size > 0 {
+                let received_data = String::from_utf8_lossy(&buffer[..size]);
+                println!("Received: {}", received_data);
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to read from stream: {}", e);
+        }
+    }
+}
 
-    // Bind the listener to the port
-    let listener = VsockListener::bind(&addr).expect("Failed to bind to VSOCK port");
-    println!("Listening on VSOCK port {}", port);
+fn main() -> std::io::Result<()> {
+    // Use VsockListener to bind to the VSOCK CID and port where the enclave sends data
+    let listener = VsockListener::bind(vsock::Cid::Local, 5005)?; // Use the correct VSOCK port
+
+    println!("Host is listening on VSOCK port 5005...");
 
     for stream in listener.incoming() {
-        let mut stream = stream.expect("Failed to accept connection");
-        let mut buffer = Vec::new();
-        stream.read_to_end(&mut buffer).expect("Failed to read from stream");
-        println!("Received attestation document: {:?}", buffer);
+        match stream {
+            Ok(stream) => {
+                println!("New connection established");
+                handle_client(stream);
+            }
+            Err(e) => {
+                eprintln!("Connection failed: {}", e);
+            }
+        }
     }
+
+    Ok(())
 }
