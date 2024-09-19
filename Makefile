@@ -27,7 +27,7 @@ eif: image keys nitro-attestation-console-signed.eif  ## Builds EIF and signs it
 keys: my_priv_key.pem csr.pem certificate.pem  ## Builds keys to sign image with
 	@echo "making keys"
 
-enclave: eif  ## Runs Nitro Enclave
+enclave: eif listener ## Runs Nitro Enclave
 # Make idempotent
 	nitro-cli run-enclave --cpu-count 2 --memory 2500 --eif-path ./nitro-attestation-console-signed.eif
 	nitro-cli describe-enclaves
@@ -84,5 +84,6 @@ socat:
 
 
 #.PHONY
-#allocator_config:	
-#[ -d /etc/nitro_enclaves/allocator]
+listener:  ## SOCAT process to lisen and print output
+	echo "STARTING LISTENER"
+	socat VSOCK-LISTEN:5000,fork EXEC:"cat" &
